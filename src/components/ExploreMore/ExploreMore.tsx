@@ -16,7 +16,8 @@ export default function ExploreMore() {
   const handleRightClick = () => setCurrIndex((prevIndex) => prevIndex + 1);
   const handleLeftClick = () => setCurrIndex((prevIndex) => prevIndex - 1);
   return (
-    <section className="px-24 py-26">
+    <section className="px-24 py-26" id="ExploreMore">
+      {/* add id then add class to index html page html element 'scroll-smooth' for smooth scrolling on whole page */}
       <div className="m-auto max-w-389">
         {/* upper heading and buttons */}
         <div className="flex items-end justify-between">
