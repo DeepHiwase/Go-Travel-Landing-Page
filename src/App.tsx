@@ -1,3 +1,7 @@
+import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
+// fetching data from remote db, caching data on client (no unecessary req to db), retries if req to db fails, it 3 times by default in react query
+import { ReactQueryDevtools } from "@tanstack/react-query-devtools";
+
 // Page
 import Page from "./components/Page";
 
@@ -18,24 +22,31 @@ import Testimonials from "./components/Testimonials/Testimonials";
 // Footer
 import Footer from "./components/Footer";
 
+const queryClient = new QueryClient();
+
 const App = () => {
   return (
-    <Page>
-      <Header>
-        <Navigation />
-        <Hero />
-      </Header>
-      <Main>
-        <Steps />
-        <Services />
-        <News />
-        <ExploreMore />
-        <FrequentTraveler />
-        <Testimonials />
-      </Main>
+    <QueryClientProvider client={queryClient}>
+      <Page>
+        <Header>
+          <Navigation />
+          <Hero />
+        </Header>
 
-      <Footer />
-    </Page>
+        <Main>
+          <Steps />
+          <Services />
+          <News />
+          <ExploreMore />
+          <FrequentTraveler />
+          <Testimonials />
+        </Main>
+
+        <Footer />
+      </Page>
+
+      <ReactQueryDevtools />
+    </QueryClientProvider>
   );
 };
 

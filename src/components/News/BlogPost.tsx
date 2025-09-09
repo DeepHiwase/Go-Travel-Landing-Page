@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { motion } from "motion/react";
 import type { BlogPost } from "../../utils/contentTypes";
+import formatDate from "../../utils/formatDate";
 
 interface BlogPostProps {
   post: BlogPost;
@@ -32,7 +33,7 @@ export default function BlogPost({ post }: BlogPostProps) {
       </div>
       <div className="mr-11 max-w-195">
         <p className="tracking-6 text-grey-900 mb-4.5 text-[1.25rem] font-medium">
-          {post.date}
+          {formatDate(post.date) /* adding format date as returning supabase data consist a different date format than figma design*/}
         </p>
         <h4 className="tracking-6 mb-6 text-[2.75rem] font-medium">
           {post.title}
