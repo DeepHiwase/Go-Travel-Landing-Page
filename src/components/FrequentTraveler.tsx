@@ -1,14 +1,54 @@
 import { useState, type MouseEvent } from "react";
+import { motion, AnimatePresence } from "motion/react";
 import Checkmark from "./Icons/Checkmark";
+import { useFormAndValidation } from "../hooks/useFormAndValidation";
+
+interface FormState {
+  currentState: "idle" | "pending" | "success" | "error";
+  errorMessage: string | null;
+}
+
+const buttonStateClasses = {
+  idle: "bg-primary-700 opacity-100",
+  pending: "bg-primary-700 opacity-50",
+  success: "bg-green opacity-100",
+  error: "bg-red opacity-100",
+};
 
 export default function FrequentTraveler() {
+  const [formState, setFormState] = useState<FormState>({
+    currentState: "idle",
+    errorMessage: null,
+  });
+  // const checkBoxRef = useRef<HTMLButtonElement | null>(null);
   const [isChecked, setIsChecked] = useState<boolean>(false);
+
+  const { values, errors, isValid, handleChange, resetForm } =
+    useFormAndValidation({
+      fullName: "",
+      emailAddress: "",
+    });
 
   const handleSubmit = (e: MouseEvent<HTMLButtonElement>) => {
     // mouse event on button element
     e.preventDefault();
-    if (isChecked) {
+    // if (!isChecked) {
+    //   checkBoxRef.current?.focus();
+    //   return;
+    // }
+
+    if (isChecked && isValid) {
       // we can submit form
+      setFormState({
+        currentState: "success",
+        errorMessage: null,
+      });
+
+      setTimeout(() => {
+        setFormState({ currentState: "idle", errorMessage: null });
+      }, 2000);
+
+      resetForm();
     }
   };
 
@@ -40,12 +80,39 @@ export default function FrequentTraveler() {
             <input
               required
               type="text"
-              name="fullname"
+              name="fullName"
+              value={values.fullName}
+              onChange={handleChange}
               minLength={2}
               maxLength={50}
               placeholder="Jane Doe"
-              className="placeholder:text-grey-400 w-full rounded-lg bg-white py-3.5 pl-4 transition-all duration-200 placeholder:font-light focus:outline-1 disabled:opacity-50"
+              className={`placeholder:text-grey-400 w-full rounded-lg bg-white py-3.5 pl-4 transition-all duration-200 placeholder:font-light focus:outline-1 disabled:opacity-50 ${errors.fullName && "outline-red"}`}
             />
+            <AnimatePresence>
+              {/* AnimatePresence is used to also apply exit animation as exit animation with removing div/node don't work proply themselves with only exit property but animate work */}
+              {errors.fullName && (
+                <motion.p
+                  initial={{
+                    opacity: 0,
+                    height: 0,
+                  }}
+                  animate={{
+                    opacity: 1,
+                    height: "auto", // telling to get height accourding to the p container content
+                  }}
+                  exit={{
+                    opacity: 0,
+                    height: 0,
+                  }}
+                  transition={{
+                    duration: 0.15,
+                  }}
+                  className="text-red pt-1 pl-0.5 text-sm"
+                >
+                  {errors.fullName}
+                </motion.p>
+              )}
+            </AnimatePresence>
           </label>
           <label className="mb-12">
             <p className="tracking-6 mb-3 text-lg/9.5 font-semibold">Email</p>
@@ -53,11 +120,37 @@ export default function FrequentTraveler() {
               required
               type="email"
               name="emailAddress"
+              value={values.emailAddress}
+              onChange={handleChange}
               minLength={3}
               maxLength={50}
               placeholder="janedoe@gmail.com"
-              className="placeholder:text-grey-400 w-full rounded-lg bg-white py-3.5 pl-4 transition-all duration-200 placeholder:font-light focus:outline-1 disabled:opacity-50"
+              className={`placeholder:text-grey-400 w-full rounded-lg bg-white py-3.5 pl-4 transition-all duration-200 placeholder:font-light focus:outline-1 disabled:opacity-50 ${errors.fullName && "outline-red"}`}
             />
+            <AnimatePresence>
+              {errors.emailAddress && (
+                <motion.p
+                  initial={{
+                    opacity: 0,
+                    height: 0,
+                  }}
+                  animate={{
+                    opacity: 1,
+                    height: "auto", // telling to get height accourding to the p container content
+                  }}
+                  exit={{
+                    opacity: 0,
+                    height: 0,
+                  }}
+                  transition={{
+                    duration: 0.15,
+                  }}
+                  className="text-red pt-1 pl-0.5 text-sm"
+                >
+                  {errors.emailAddress}
+                </motion.p>
+              )}
+            </AnimatePresence>
           </label>
 
           <div className="flex flex-wrap items-center justify-between gap-8">
@@ -65,6 +158,7 @@ export default function FrequentTraveler() {
             {/* understand the leveling of this label to use custom checkbox, using button to make check styling */}
             <label className="text-grey-800 flex cursor-pointer items-center gap-x-1.5">
               <button
+                // ref={checkBoxRef}
                 className="flex size-5 cursor-pointer items-center justify-center rounded-xs bg-white p-1 disabled:opacity-50"
                 type="button" // adding type button so to override the default styles of button and make it a generic button for form
                 onClick={() => setIsChecked(!isChecked)}
@@ -80,10 +174,14 @@ export default function FrequentTraveler() {
             </label>
 
             <button
-              className="hover:bg-primary-800 bg-primary-700 cursor-pointer rounded-[0.625rem] px-8 py-3.5 font-medium text-white transition-all duration-200 disabled:cursor-not-allowed"
+              className={`enabled:hover:bg-primary-800 cursor-pointer rounded-[0.625rem] px-8 py-3.5 font-medium text-white transition-all duration-200 disabled:cursor-not-allowed ${buttonStateClasses[formState.currentState]}`}
               onClick={handleSubmit}
+              disabled={formState.currentState !== "idle"}
             >
-              Learn More
+              {formState.currentState === "idle" && "Learn More"}
+              {formState.currentState === "pending" && "Submitting..."}
+              {formState.currentState === "success" && "Success!"}
+              {formState.currentState === "error" && "Submission Failed"}
             </button>
           </div>
         </form>
