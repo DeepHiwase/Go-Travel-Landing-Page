@@ -1,14 +1,20 @@
 import { useState } from "react";
-import { locations } from "../../utils/content";
+// import { locations } from "../../utils/content";// now no need for local import as we are using remote data from db supabase
 import CaretUp from "../Icons/CaretUp";
 import LocationCard from "./LocationCard";
 import { LOCATION_CARD_SHOWN } from "../../utils/constants";
+import useQueryLocations from "../../hooks/useQueryLocations";
+import Loader from "../Loader";
+import Error from "../Error";
 
 export default function ExploreMore() {
+  // after using react-query
+  const { locations, error, isLoading } = useQueryLocations();
+
   const [currIndex, setCurrIndex] = useState<number>(0);
 
-  const totalLocations = locations.length;
-  const renderedLocations = locations.slice(
+  const totalLocations = locations?.length || 0; // when using remote data -> this gives error - 'locations' is possibly 'undefined'. -> so use '?' to tell until locations is defined don't access length, // same for down totalLocations var also for slice // but locations doesn't exist then use 0 by putting || 0
+  const renderedLocations = locations?.slice(
     currIndex,
     currIndex + LOCATION_CARD_SHOWN,
   ); // 0 -> 6 so slicing array to get 0,1,2,3,4,5
@@ -50,12 +56,26 @@ export default function ExploreMore() {
           </div>
         </div>
 
+        {/* Loading state */}
+        {isLoading && !error && <Loader />}
+
         {/* locations card grid */}
-        <ul className="mt-33 grid grid-cols-3 gap-x-29 gap-y-24">
-          {renderedLocations.map((location) => (
-            <LocationCard location={location} key={location.id} />
-          ))}
-        </ul>
+        {/* Success state */}
+        {!isLoading && !error && (
+          <ul className="mt-33 grid grid-cols-3 gap-x-29 gap-y-24">
+            {renderedLocations?.map((location) => (
+              <LocationCard location={location} key={location.id} />
+            ))}
+          </ul>
+        )}
+
+        {/* Error state */}
+        {!isLoading && error && (
+          <Error>
+            Its looks like something went wrong while loading our travel
+            locations.
+          </Error>
+        )}
       </div>
     </section>
   );

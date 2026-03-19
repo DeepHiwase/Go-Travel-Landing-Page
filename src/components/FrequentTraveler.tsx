@@ -2,6 +2,8 @@ import { useState, type MouseEvent } from "react";
 import { motion, AnimatePresence } from "motion/react";
 import Checkmark from "./Icons/Checkmark";
 import { useFormAndValidation } from "../hooks/useFormAndValidation";
+import useInsertLead from "../hooks/useInsertLead";
+import { FORM_STATE_DURATION } from "../utils/constants";
 
 interface FormState {
   currentState: "idle" | "pending" | "success" | "error";
@@ -29,6 +31,11 @@ export default function FrequentTraveler() {
       emailAddress: "",
     });
 
+  const mutation = useInsertLead({
+    onSuccess: handleSuccess,
+    onError: handleError,
+  });
+
   const handleSubmit = (e: MouseEvent<HTMLButtonElement>) => {
     // mouse event on button element
     e.preventDefault();
@@ -40,17 +47,46 @@ export default function FrequentTraveler() {
     if (isChecked && isValid) {
       // we can submit form
       setFormState({
-        currentState: "success",
+        // currentState: "success",
+        currentState: "pending", // we are doing to do all for db status
         errorMessage: null,
       });
 
-      setTimeout(() => {
-        setFormState({ currentState: "idle", errorMessage: null });
-      }, 2000);
+      // setTimeout(() => {
+      //   setFormState({ currentState: "idle", errorMessage: null });
+      // }, 2000);
 
-      resetForm();
+      // resetForm();
+
+      mutation.mutate({
+        createdAt: Date.now(), // return in int8 type so thats why in supabase, use int8 as it gives time in millisecond from 1970 in unix timestamp,
+        fullName: values.fullName,
+        emailAddress: values.emailAddress,
+      });
     }
   };
+
+  // Defining for useMutation custom onSuccess & onError
+  function handleSuccess() {
+    resetForm(); // so only reset form when in success state
+    setIsChecked(false); // imp, bhul jate hai
+
+    setFormState({ currentState: "success", errorMessage: null });
+    // to solve getting stuck in success state
+    setTimeout(
+      () => setFormState({ currentState: "idle", errorMessage: null }),
+      FORM_STATE_DURATION,
+    );
+  }
+
+  function handleError(error: Error) {
+    setFormState({ currentState: "error", errorMessage: error.message }); // TODO: can add a div/component to show error message also
+    // to solve getting stuck in error state
+    setTimeout(
+      () => setFormState({ currentState: "idle", errorMessage: null }),
+      FORM_STATE_DURATION,
+    );
+  }
 
   return (
     <section className="bg-primary-100 px-24 py-36">
@@ -85,6 +121,7 @@ export default function FrequentTraveler() {
               onChange={handleChange}
               minLength={2}
               maxLength={50}
+              disabled={formState.currentState !== "idle"}
               placeholder="Jane Doe"
               className={`placeholder:text-grey-400 w-full rounded-lg bg-white py-3.5 pl-4 transition-all duration-200 placeholder:font-light focus:outline-1 disabled:opacity-50 ${errors.fullName && "outline-red"}`}
             />
@@ -124,6 +161,7 @@ export default function FrequentTraveler() {
               onChange={handleChange}
               minLength={3}
               maxLength={50}
+              disabled={formState.currentState !== "idle"}
               placeholder="janedoe@gmail.com"
               className={`placeholder:text-grey-400 w-full rounded-lg bg-white py-3.5 pl-4 transition-all duration-200 placeholder:font-light focus:outline-1 disabled:opacity-50 ${errors.fullName && "outline-red"}`}
             />
@@ -162,6 +200,7 @@ export default function FrequentTraveler() {
                 className="flex size-5 cursor-pointer items-center justify-center rounded-xs bg-white p-1 disabled:opacity-50"
                 type="button" // adding type button so to override the default styles of button and make it a generic button for form
                 onClick={() => setIsChecked(!isChecked)}
+                disabled={formState.currentState !== "idle"}
               >
                 <Checkmark
                   className={`size-2 transition-all duration-200 ${isChecked ? "visible size-3 opacity-100" : "invisible size-2 opacity-0"}`}

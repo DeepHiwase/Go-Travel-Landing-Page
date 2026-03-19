@@ -1,6 +1,6 @@
 // call to supabase- remote state
 import { createClient } from "@supabase/supabase-js";
-import type { BlogPost } from "../utils/contentTypes";
+import type { BlogPost, Lead, Location } from "../utils/contentTypes";
 import type { Database } from "./Database";
 
 const supabaseUrl = "https://rvciyptjviplwldsrkdu.supabase.co";
@@ -14,7 +14,8 @@ export async function getBlogPosts() {
 
   // throw new Error('some error occured...'); // for dev mode
 
-  if (error) { // this will be handle by react-query so handle gracefully instead of crashing server 
+  if (error) {
+    // this will be handle by react-query so handle gracefully instead of crashing server
     throw new Error(
       `ERROR: Database returned error when fetching blog posts: ${error.message}`,
     );
@@ -32,4 +33,51 @@ export async function getBlogPosts() {
   });
 
   return blogPosts;
+}
+
+export async function getLocations() {
+  const { data, error } = await supabase.from("Locations").select();
+
+  // throw new Error('some error occured...'); // for dev mode
+
+  if (error) {
+    throw new Error(
+      `ERROR: Database returned error when fetching blog posts: ${error.message}`,
+    );
+  }
+
+  const locations: Location[] = data.map((location) => {
+    return {
+      id: location.id,
+      img: location.img_url,
+      alt: location.img_alt,
+      rating: location.rating,
+      title: location.title,
+      location: location.location,
+      pricePerPerson: location.price_per_person,
+    };
+  });
+
+  return locations;
+}
+
+export async function insertLead(Lead: Lead) {
+  // first do 'const result =' then after all RHS written then destructure LHS `result` so to get correct output autocomplete without errors or conflicting with formatter
+  const { error } = await supabase.from("Leads").insert([
+    {
+      created_at: Lead.createdAt,
+      full_name: Lead.fullName,
+      email_address: Lead.emailAddress,
+    },
+  ]);
+
+  if (error) {
+    throw new Error(
+      `ERROR: Database returned error when inserting lead data: ${error.message}`,
+    );
+  }
+
+  return {
+    error,
+  };
 }
